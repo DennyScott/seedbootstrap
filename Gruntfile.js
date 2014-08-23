@@ -18,7 +18,11 @@ module.exports = function (grunt) {
   // Configurable paths for the application
   var appConfig = {
     app: require('./bower.json').appPath || 'app',
-    dist: 'dist'
+    dist: 'dist',
+		scripts: 'scripts',
+		styles: 'styles',
+		images: 'images',
+		css: ''
   };
 
   // Define the configuration for all the tasks
@@ -350,12 +354,85 @@ module.exports = function (grunt) {
     },
 
     // Test settings
-    karma: {
-      unit: {
-        configFile: 'test/karma.conf.js',
-        singleRun: true
-      }
-    }
+    	karma: {
+			options: {
+				basePath: '',
+				frameworks: ['jasmine'],
+				files: [
+					'bower_components/angular/angular.js',
+					'bower_components/angular-touch/angular-touch.js',
+					'bower_components/angular-animate/angular-animate.js',
+					'bower_components/angular-sanitize/angular-sanitize.js',
+					'bower_components/angular-ui-router/release/angular-ui-router.js',
+					'bower_components/angular-mocks/angular-mocks.js',
+					'app/scripts/**/*.js',
+					'bower_components/jquery/dist/jquery.js',
+					'test/unit//**/*.js'
+				],
+				autoWatch: false,
+				reporters: ['dots', 'coverage'],
+				port: 8080,
+				singleRun: false,
+				preprocessors: {
+					// Update this if you change the yeoman config path
+					'app/scripts/**/*.js': ['coverage']
+				},
+				proxies :  {
+  					'/images/': '/app/images/'
+				},
+				coverageReporter: {
+					reporters: [
+						{ type: 'html', dir: 'coverage/' },
+						{ type: 'text-summary' }
+					]
+				}
+			},
+			unit: {
+				// Change this to 'Chrome', 'Firefox', etc. Note that you will need
+				// to install a karma launcher plugin for browsers other than Chrome.
+				browsers: ['PhantomJS'],
+				background: true,
+			},
+			continuous: {
+					browsers: ['PhantomJS'],
+				singleRun: true
+			}
+		},
+
+		//Use the Protractor Test Runner for our E2E Testing. This will use the Chrome Driver and the Selenium Server Jar
+		protractor: {
+			options: {
+				keepAlive: true, // If false, the grunt process stops when the test fails.
+				noColor: false, // If true, protractor will not use colors in its output.
+			
+			},
+
+			testArgs: {
+				configFile: "test/e2e/e2e.conf.js",
+				options: {
+					args: {
+						baseUrl: 'http://localhost:9001/',
+						chromeDriver: "node_modules/chromedriver/bin/chromedriver",
+						seleniumServerJar: "node_modules/selenium-server-standalone-jar/jar/selenium-server-standalone-2.40.0.jar",
+						 params: {
+              number: 1,
+              bool: true,
+              str: "string",
+              nil: null, // Null is not supported.
+              obj: {
+                array: [1, 2, 3],
+                undef: undefined
+              }
+	 					 },
+					capabilities: {
+						'browserName': 'chrome'
+					},
+					rootElement:"body",
+					verbose: true
+				}
+			}
+		}
+	}
   });
 
 
@@ -381,11 +458,19 @@ module.exports = function (grunt) {
 
   grunt.registerTask('test', [
     'clean:server',
-    'concurrent:test',
+    'concurrent:',
     'autoprefixer',
     'connect:test',
     'karma'
   ]);
+
+		grunt.registerTask('e2e', [
+		'clean:server',
+		'concurrent:test',
+		'autoprefixer',
+		'connect:test',
+		'protractor'
+	]);
 
   grunt.registerTask('build', [
     'clean:dist',
